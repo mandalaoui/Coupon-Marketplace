@@ -1,0 +1,120 @@
+@baseUrl = http://localhost:12345
+
+### Health
+GET {{baseUrl}}/api/health
+
+### -----------------------------
+### Admin Auth
+### -----------------------------
+
+### Admin Login
+# @name adminLogin
+POST {{baseUrl}}/api/admin/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "AdminPassword123!"
+}
+
+### Store token
+@adminToken = {{adminLogin.response.body.token}}
+
+### Admin Me
+GET {{baseUrl}}/api/admin/auth/me
+Authorization: Bearer {{adminToken}}
+
+### -----------------------------
+### Admin Products (Coupons CRUD)
+### -----------------------------
+
+### List all products (admin)
+GET {{baseUrl}}/api/admin/products
+Authorization: Bearer {{adminToken}}
+
+### Create coupon
+# @name createCoupon
+POST {{baseUrl}}/api/admin/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Amazon $10 Gift Card",
+  "description": "Digital coupon",
+  "image_url": "https://placehold.co/600x300?text=Amazon+10",
+  "cost_price": 8,
+  "margin_percentage": 25,
+  "value_type": "STRING",
+  "value": "AMZN-10-XYZ"
+}
+
+### Save created id
+@couponId = dea09104-ef01-495b-8314-61bcf23ee6dc
+
+### Update coupon (example: change margin, keep value hidden unless you send it)
+PATCH {{baseUrl}}/api/admin/products/{{couponId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Amazon $10 Gift Card (Updated)",
+  "description": "Updated description",
+  "image_url": "https://placehold.co/600x300?text=Amazon+10+Updated",
+  "cost_price": 8,
+  "margin_percentage": 30,
+  "value_type": "STRING"
+}
+
+### Delete coupon
+DELETE {{baseUrl}}/api/admin/products/{{couponId}}
+Authorization: Bearer {{adminToken}}
+
+### -----------------------------
+### Customer Shop (Frontend API)
+### -----------------------------
+
+### List unsold products (customer)
+GET {{baseUrl}}/api/shop/products
+
+### Purchase product (customer)
+# Use a real id from list
+POST {{baseUrl}}/api/shop/products/{{couponId}}/purchase
+Content-Type: application/json
+
+{}
+
+
+
+### ---------------------------------
+### Reseller API
+### ---------------------------------
+
+@resellerToken = reseller-token-xyz789
+
+### Get all available products (unsold)
+GET {{baseUrl}}/api/v1/products
+Authorization: Bearer {{resellerToken}}
+
+### Get product by id
+# Use a real id from the list above
+GET {{baseUrl}}/api/v1/products/{{couponId}}
+Authorization: Bearer {{resellerToken}}
+
+### Purchase product as reseller
+POST {{baseUrl}}/api/v1/products/{{couponId}}/purchase
+Authorization: Bearer {{resellerToken}}
+Content-Type: application/json
+
+{
+  "reseller_price": 120
+}
+
+
+### Reseller price too low
+POST {{baseUrl}}/api/v1/products/{{couponId}}/purchase
+Authorization: Bearer {{resellerToken}}
+Content-Type: application/json
+
+{
+  "reseller_price": 1
+}
