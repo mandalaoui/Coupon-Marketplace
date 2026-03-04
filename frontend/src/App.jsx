@@ -1,35 +1,66 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect, createContext, useContext } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import CustomerShop from "./pages/CustomerShop.jsx";
+import AdminLogin from "./pages/AdminLogin.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
+import { authApi } from "./api/client.js";
+import Header from "./components/Header.jsx";
+import Spinner from "./components/Spinner.jsx";
 
-function App() {
-  const [count, setCount] = useState(0)
+// ── Auth Context ──────────────────────────────────────────────────────────────
+export const AuthContext = createContext(null);
+export const useAuth = () => useContext(AuthContext);
+
+function AuthProvider({ children }) {
+  const [admin, setAdmin] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem("admin_token");
+    if (!token) { setLoading(false); return; }
+    authApi.me()
+      .then((data) => setAdmin(data.user))
+      .catch(() => localStorage.removeItem("admin_token"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const login = (token, user) => {
+    localStorage.setItem("admin_token", token);
+    setAdmin(user);
+  };
+
+  const logout = () => {
+    localStorage.removeItem("admin_token");
+    setAdmin(null);
+  };
+
+  if (loading) return <Spinner />;
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <AuthContext.Provider value={{ admin, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
-export default App
+function RequireAuth({ children }) {
+  const { admin } = useAuth();
+  return admin ? children : <Navigate to="/admin/login" replace />;
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Header />
+        <Routes>
+          <Route path="/" element={<CustomerShop />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          {/* <Route path="/admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} /> */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
