@@ -29,7 +29,10 @@ function withAdminAuth(headers = {}) {
 // ── Customer / Public ──────────────────────────────────────────────────────
 
 export const shopApi = {
-  listProducts: () => request("/api/shop/products"),
+  listProducts: async () => {
+    const data = await request("/api/shop/products");
+    return Array.isArray(data) ? data : (data.products || []);
+  },
   purchase: (productId) =>
     request(`/api/shop/products/${productId}/purchase`, { method: "POST", body: "{}" }),
 };

@@ -4,7 +4,7 @@ class CustomerController {
   static async list(req, res, next) {
     try {
       const products = await ProductService.listUnsold();
-      res.json({ products });
+      res.json( products );
     } catch (err) {
       next(err);
     }

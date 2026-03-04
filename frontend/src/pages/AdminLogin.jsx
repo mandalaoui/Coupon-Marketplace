@@ -12,14 +12,23 @@ export default function AdminLogin() {
   const { login, admin } = useAuth();
   const navigate = useNavigate();
 
-  if (admin) { navigate("/admin"); return null; }
+  // Redirect if already logged in
+  if (admin) {
+    navigate("/admin");
+    return null;
+  }
 
+  // Handles login submission using authApi (from client.js)
   const handleSubmit = async () => {
-    if (!email || !password) { setError("Email and password are required."); return; }
-    setLoading(true); setError("");
+    if (!email || !password) {
+      setError("Email and password are required.");
+      return;
+    }
+    setLoading(true);
+    setError("");
     try {
-      const { token, user } = await authApi.login(email, password);
-      login(token, user);
+      const resp = await authApi.login(email, password); // returns { token, user }
+      login(resp.token, resp.user);
       navigate("/admin");
     } catch (err) {
       setError(err.message || "Login failed");
@@ -37,27 +46,41 @@ export default function AdminLogin() {
         {error && <Alert type="error">{error}</Alert>}
 
         <div className="form-group">
-          <label>Email</label>
+          <label htmlFor="admin-login-email">Email</label>
           <input
+            id="admin-login-email"
             type="email"
             placeholder="admin@example.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+            onChange={e => setEmail(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleSubmit()}
+            autoComplete="username"
           />
         </div>
         <div className="form-group">
-          <label>Password</label>
+          <label htmlFor="admin-login-password">Password</label>
           <input
+            id="admin-login-password"
             type="password"
             placeholder="••••••••"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+            onChange={e => setPassword(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleSubmit()}
+            autoComplete="current-password"
           />
         </div>
-        <button className="btn btn-primary btn-full" onClick={handleSubmit} disabled={loading}>
-          {loading ? <><span className="spinner" />&nbsp;Signing in...</> : "Sign In"}
+        <button
+          className="btn btn-primary btn-full"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <span className="spinner" />&nbsp;Signing in...
+            </>
+          ) : (
+            "Sign In"
+          )}
         </button>
       </div>
     </div>

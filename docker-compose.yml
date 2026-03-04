@@ -1,0 +1,37 @@
+services:
+
+  mongo:
+    image: mongo:7
+    container_name: coupon_mongo
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build:
+      context: ./backend
+    env_file:
+      - ./.env
+    container_name: coupon_backend
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    ports:
+      - "12345:12345"
+    volumes:
+      - ./backend/uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: coupon_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  mongo_data:

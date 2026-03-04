@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Modal from "../components/Modal.jsx";
 import Alert from "../components/Alert.jsx";
-import { MOCK_PRODUCTS } from "../mock/products.js"; // Using mock data instead of adminApi
+import { adminApi } from "../api/client.js";
 
 const EMPTY_FORM = {
   name: "", description: "", image_url: "",
@@ -32,21 +32,27 @@ function CouponFormModal({ initial, onClose, onSaved }) {
   };
 
   const handleSave = async () => {
-    setError(""); setLoading(true);
+    setError("");
+    setLoading(true);
     try {
-      // simulate save/update (mock)
-      // This would be handled externally via parent with local state
-      setTimeout(() => {
-        onSaved({
-          ...form,
-          cost_price: parseFloat(form.cost_price),
-          margin_percentage: parseFloat(form.margin_percentage),
-          minimum_sell_price: minSell(),
-        });
-        setLoading(false);
-      }, 500);
+      const payload = {
+        ...form,
+        cost_price: parseFloat(form.cost_price),
+        margin_percentage: parseFloat(form.margin_percentage),
+      };
+      let saved;
+      if (initial) {
+        // PATCH, do not send 'value' if left blank on edit
+        const updatePayload = { ...payload };
+        if (!form.value) delete updatePayload.value;
+        saved = await adminApi.updateCoupon(initial.id, updatePayload);
+      } else {
+        saved = await adminApi.createCoupon(payload);
+      }
+      onSaved(saved);
+      setLoading(false);
     } catch (err) {
-      setError("Save failed");
+      setError(err?.message || "Save failed");
       setLoading(false);
     }
   };
@@ -124,7 +130,11 @@ function ConfirmModal({ message, onConfirm, onClose }) {
       <p style={{ marginBottom: "20px", color: "var(--gray-700)" }}>{message}</p>
       <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
         <button className="btn btn-outline" onClick={onClose}>Cancel</button>
-        <button className="btn btn-danger" disabled={loading} onClick={async () => { setLoading(true); await onConfirm(); }}>
+        <button className="btn btn-danger" disabled={loading} onClick={async () => { 
+          setLoading(true); 
+          await onConfirm(); 
+          setLoading(false);
+        }}>
           {loading ? <span className="spinner" /> : "Delete"}
         </button>
       </div>
@@ -133,7 +143,6 @@ function ConfirmModal({ message, onConfirm, onClose }) {
 }
 
 export default function AdminDashboard() {
-  // Use mock data instead of server API
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -142,26 +151,32 @@ export default function AdminDashboard() {
   const [deleteItem, setDeleteItem] = useState(null);
   const [filter, setFilter] = useState("all");
 
-  // Simulate a "load" from mock data (and deduplicate by id for demo)
-  const load = () => {
+  const load = async () => {
     setLoading(true);
     setError("");
-    setTimeout(() => {
-      // Remove duplicates by keeping last instance per id
-      const idMap = new Map();
-      for (const p of MOCK_PRODUCTS) idMap.set(p.id, p);
-      setProducts(Array.from(idMap.values()));
+    try {
+      const fetched = await adminApi.listProducts();
+      // fetched can already be deduped by id
+      setProducts(fetched);
+    } catch (err) {
+      setError(err?.message || "Failed to fetch products.");
+    } finally {
       setLoading(false);
-    }, 350);
+    }
   };
 
-  useEffect(load, []);
+  useEffect(() => { load(); }, []);
 
-  // Mock handleDelete: just remove from local state
+  // Delete product using API
   const handleDelete = async () => {
     if (!deleteItem) return;
-    setProducts((prev) => prev.filter((p) => p.id !== deleteItem.id));
-    setDeleteItem(null);
+    try {
+      await adminApi.deleteProduct(deleteItem.id);
+      setProducts((prev) => prev.filter((p) => p.id !== deleteItem.id));
+      setDeleteItem(null);
+    } catch (err) {
+      setError(err?.message || "Failed to delete product.");
+    }
   };
 
   // Filtering
@@ -171,29 +186,12 @@ export default function AdminDashboard() {
     return true;
   });
 
-  // Handle create/update for mock scenario
+  // Handle create/update via API
   const handleSaved = (item) => {
     setShowForm(false);
     setEditItem(null);
-    if (!item) return;
-    setProducts((prev) => {
-      if (editItem) {
-        // Update
-        return prev.map((p) => (p.id === editItem.id ? { ...p, ...item } : p));
-      } else {
-        // New: simulate ID
-        const newId = (Math.random() + 1).toString(36).substring(7).padEnd(24, "0");
-        return [
-          ...prev,
-          {
-            ...item,
-            id: newId,
-            is_sold: false,
-            minimum_sell_price: item.minimum_sell_price ?? ((item.cost_price * (1 + item.margin_percentage / 100)).toFixed(2)),
-          },
-        ];
-      }
-    });
+    // After create/update, reload the whole product list to reflect any server changes
+    load();
   };
 
   return (

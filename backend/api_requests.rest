@@ -89,7 +89,7 @@ Content-Type: application/json
 ### Reseller API
 ### ---------------------------------
 
-@resellerToken = reseller-token-xyz789
+@resellerToken = reseller-token-abc123
 
 ### Get all available products (unsold)
 GET {{baseUrl}}/api/v1/products

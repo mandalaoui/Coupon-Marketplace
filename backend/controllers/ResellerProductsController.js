@@ -4,7 +4,7 @@ class ResellerProductsController {
   static async list(req, res, next) {
     try {
       const products = await ProductService.listUnsold();
-      res.json({ products });
+      res.json( products );
     } catch (err) {
       next(err);
     }
@@ -13,7 +13,7 @@ class ResellerProductsController {
   static async get(req, res, next) {
     try {
       const product = await ProductService.getPublicById(req.params.productId);
-      res.json({ product });
+      res.json( product );
     } catch (err) {
       next(err);
     }

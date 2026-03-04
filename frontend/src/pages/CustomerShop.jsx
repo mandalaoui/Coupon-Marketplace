@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import ProductCard from "../components/ProductCard.jsx";
 import Modal from "../components/Modal.jsx";
 import Alert from "../components/Alert.jsx";
-import { MOCK_PRODUCTS } from "../mock/products.js";
+import { shopApi } from "../api/client.js";
 
 // --- PurchaseModal component ---
 function PurchaseModal({ product, onClose }) {
@@ -13,17 +13,17 @@ function PurchaseModal({ product, onClose }) {
   const handlePurchase = async () => {
     setLoading(true);
     setError("");
-    // Simulate network/digital delivery.
-    setTimeout(() => {
+    try {
+      const data = await shopApi.purchase(product.id);
       setResult({
-        value_type: product.value_type,
-        value:
-          product.value_type === "IMAGE"
-            ? product.image_url
-            : "ABCD-1234-COUPON",
+        value_type: data.value_type,
+        value: data.value,
       });
+    } catch (err) {
+      setError(err?.message || "Purchase failed");
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -152,17 +152,37 @@ export default function CustomerShop() {
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
-    // Use all unsold coupons from the mock database.
-    setProducts(MOCK_PRODUCTS.filter((p) => !p.is_sold));
-    setLoading(false);
+    let ignore = false;
+    async function fetchProducts() {
+      setLoading(true);
+      setError("");
+      try {
+        const result = await shopApi.listProducts();
+        if (!ignore) setProducts(result);
+      } catch (err) {
+        if (!ignore) setError(err?.message || "Failed to load products");
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+    fetchProducts();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   // Remove the sold product from the local list after purchase.
   const handlePurchaseClose = () => {
     setSelected(null);
-    setProducts((prevProds) =>
-      prevProds.filter((p) => p.id !== selected?.id)
-    );
+    // After purchase, re-fetch products to get the up-to-date list.
+    (async () => {
+      try {
+        const refreshedProducts = await shopApi.listProducts();
+        setProducts(refreshedProducts);
+      } catch (err) {
+        setError(err?.message || "Failed to reload products");
+      }
+    })();
   };
 
   if (loading) {
