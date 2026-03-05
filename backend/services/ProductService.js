@@ -129,10 +129,13 @@ class ProductService {
   }
 
   static async adminUpdateCoupon(id, data) {
-    // Prevent clients from setting minimum_sell_price directly
+    if (!data || typeof data !== "object") {
+      throw AppError.validation("Body must be a JSON object");
+    }
+  
     delete data.minimum_sell_price;
-    delete data.type;    // type is immutable after creation
-
+    delete data.type;
+  
     const updated = await ProductRepository.updateCoupon(id, data);
     if (!updated) throw AppError.notFound("Product");
     return toAdminDTO(updated);

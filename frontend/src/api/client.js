@@ -3,12 +3,14 @@ const BASE = import.meta.env.VITE_API_BASE_URL || "";
 const getAdminToken = () => localStorage.getItem("admin_token");
 
 async function request(path, options = {}) {
+  const mergedHeaders = {
+    "Content-Type": "application/json",
+    ...(options.headers || {}),
+  };
+
   const res = await fetch(`${BASE}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-    ...options,
+    ...options,              // קודם כל options
+    headers: mergedHeaders,  // ואז headers כדי שלא יידרסו
   });
 
   const data = await res.json().catch(() => ({}));

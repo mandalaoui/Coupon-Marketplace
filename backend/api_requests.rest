@@ -49,7 +49,7 @@ Content-Type: application/json
 }
 
 ### Save created id
-@couponId = dea09104-ef01-495b-8314-61bcf23ee6dc
+@couponId = 061502ba-df6e-43d7-badf-16899ac24ef4
 
 ### Update coupon (example: change margin, keep value hidden unless you send it)
 PATCH {{baseUrl}}/api/admin/products/{{couponId}}
