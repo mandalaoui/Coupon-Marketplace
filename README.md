@@ -486,25 +486,23 @@ The `reseller_price` must be greater than or equal to the calculated `minimum_se
 
 **Shop Page**
 
-![Shop page - customer storefront](shop_page.png)
+<img width="1217" height="863" alt="shop_page" src="https://github.com/user-attachments/assets/c92e8d23-1e01-4f40-9563-6ebe3019c569" />
 
 **Admin Login**
 
-![Admin login page](admin_login.png)
+<img width="1160" height="782" alt="admin_login" src="https://github.com/user-attachments/assets/6dfbe68f-a598-478c-98d0-5e379487abd3" />
 
 **Admin Dashboard**
 
-![Admin dashboard - coupon management](admin_dashboard.png)
+<img width="1161" height="820" alt="admin_dashboard" src="https://github.com/user-attachments/assets/909e9b16-ecd3-4ac3-8c3e-5661e4aad577" />
 
 **Create Coupon (Admin)**
 
-![Admin creates new coupon](create_coupon.png)
+<img width="1200" height="861" alt="create_coupon" src="https://github.com/user-attachments/assets/2d3411de-8168-418b-98cf-d997bfdd7c62" />
 
 **Edit Coupon (Admin)**
 
-![Admin edits existing coupon](edit_coupon.png)
-
-
+<img width="1200" height="862" alt="edit_coupon" src="https://github.com/user-attachments/assets/6760a6b8-a5a1-4371-b634-c9aca21ce935" />
 
 ---
 
@@ -512,10 +510,10 @@ The `reseller_price` must be greater than or equal to the calculated `minimum_se
 
 ### Pricing Formula
 
-The selling price is calculated **server-side** to prevent tampering:
-
-$$\text{minimum\_sell\_price} = \text{cost\_price} \times \left(1 + \frac{\text{margin\_percentage}}{100}\right)$$
-
+The product price is calculated **server-side** to prevent manipulation by clients.
+```
+minimum_sell_price = cost_price × (1 + margin_percentage / 100)
+```
 **Example:** A coupon with `cost_price: 30` and `margin_percentage: 20` has a `minimum_sell_price` of **36**.
 
 ### Data Visibility Rules
