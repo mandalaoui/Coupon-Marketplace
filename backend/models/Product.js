@@ -37,11 +37,13 @@ const couponSchema = new mongoose.Schema(
     cost_price: {
       type: mongoose.Schema.Types.Decimal128,
       required: true,
+      min: 0,
       get: (v) => (v == null ? undefined : parseFloat(v.toString())),
     },
     margin_percentage: {
       type: mongoose.Schema.Types.Decimal128,
       required: true,
+      min: 0,
       get: (v) => (v == null ? undefined : parseFloat(v.toString())),
     },
     is_sold: { type: Boolean, default: false },

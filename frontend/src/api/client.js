@@ -9,8 +9,8 @@ async function request(path, options = {}) {
   };
 
   const res = await fetch(`${BASE}${path}`, {
-    ...options,              // קודם כל options
-    headers: mergedHeaders,  // ואז headers כדי שלא יידרסו
+    ...options,
+    headers: mergedHeaders,
   });
 
   const data = await res.json().catch(() => ({}));
@@ -36,8 +36,7 @@ export const shopApi = {
     return Array.isArray(data) ? data : (data.products || []);
   },
   purchase: (productId) =>
-    request(`/api/shop/products/${productId}/purchase`, { method: "POST", body: "{}" }),
-};
+    request(`/api/shop/products/${productId}/purchase`, { method: "POST", body: JSON.stringify({}) }),};
 
 // ── Admin Auth ─────────────────────────────────────────────────────────────
 

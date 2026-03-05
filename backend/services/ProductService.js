@@ -8,14 +8,11 @@ const AppError = require("../utils/AppError");
 const toPublicDTO = (product) => {
   const obj = product.toObject({ getters: true, virtuals: true });
   return {
-    id: obj._id,
+    id: obj.id,
     name: obj.name,
     description: obj.description,
-    type: obj.type,
     image_url: obj.image_url,
-    price: obj.minimum_sell_price,  // derived virtual
-    created_at: obj.created_at,
-    updated_at: obj.updated_at,
+    price: obj.minimum_sell_price,
   };
 };
 
@@ -26,7 +23,7 @@ const toPublicDTO = (product) => {
 const toAdminDTO = (product) => {
   const obj = product.toObject({ getters: true, virtuals: true });
   return {
-    id: obj._id,
+    id: obj.id,
     name: obj.name,
     description: obj.description,
     type: obj.type,

@@ -23,7 +23,6 @@ const updateCouponSchema = Joi.object({
   margin_percentage: Joi.number().min(0).precision(2),
   value_type: Joi.string().valid("STRING", "IMAGE"),
   value: Joi.string(),
-  is_sold: Joi.boolean(),
 }).min(1);
 
 const resellerPurchaseSchema = Joi.object({
