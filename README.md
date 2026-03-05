@@ -239,29 +239,79 @@ coupon-marketplace/
 
 ## ⚙️ Configuration (Environment Variables)
 
-This project uses **two separate `.env` files** depending on how you run it:
+### ✅ What to put in your `.env` files (ready-to-use samples)
 
-- `/.env` (project root): **required for Docker Compose** (recommended).
-- `backend/.env`: **required for local backend run without Docker**.
+#### 🐳 A) Docker Compose (`/.env` file in the project root)
 
-The most important environment variables are:
+```dotenv
+# ===== Backend =====
+PORT=12345
+NODE_ENV=development
 
-| Variable             | Description                                             |
-|----------------------|---------------------------------------------------------|
-| `PORT`               | Backend Express port                                    |
-| `MONGO_URI`          | MongoDB connection string                               |
-| `MONGO_USER`/`MONGO_PASS` | (Docker only) MongoDB credentials                 |
-| `JWT_SECRET`         | Secret for admin JWT tokens                             |
-| `JWT_EXPIRES_IN`     | (e.g. `7d`) Token expiry                               |
-| `RESELLER_TOKENS`    | Comma-separated tokens for Reseller API authentication  |
-| `ADMIN_SEED_EMAIL`   | Email for first admin                                   |
-| `ADMIN_SEED_PASSWORD`| Password for first admin                                |
-| `VITE_API_BASE_URL`  | (Frontend) Backend API URL (default: `http://localhost:12345`) |
-| `NODE_ENV`           | Runtime environment                                     |
+# ===== Mongo (Docker service name is "mongo") =====
+MONGO_URI=mongodb://mongo:27017/coupon_marketplace
+
+# If you defined MongoDB credentials in docker-compose.yml, set them here:
+MONGO_USER=admin
+MONGO_PASS=admin123
+
+# ===== Auth =====
+JWT_SECRET=change_this_to_a_very_long_random_string_32_chars_min
+JWT_EXPIRES_IN=7d
+
+# Tokens for reseller API (comma-separated, no spaces)
+RESELLER_TOKENS=token1,token2,token3
+
+# ===== Admin seed (created on first run) =====
+ADMIN_SEED_EMAIL=admin@example.com
+ADMIN_SEED_PASSWORD=Admin12345!
+
+# ===== Frontend =====
+VITE_API_BASE_URL=http://localhost:12345
+```
+
+**Important for Docker:**  
+- `MONGO_URI` uses `mongo` because that is the service name inside the Docker network.  
+- `MONGO_USER`/`MONGO_PASS` are required only if MongoDB authentication is enabled in `docker-compose.yml`. If Mongo authentication is not enabled, remove them or leave them empty.
+
+---
+
+#### 💻 B) Local Run (without Docker) (`backend/.env`):
+
+```dotenv
+PORT=12345
+NODE_ENV=development
+
+# Local Mongo (running on your machine)
+MONGO_URI=mongodb://127.0.0.1:27017/coupon_marketplace
+
+JWT_SECRET=change_this_to_a_very_long_random_string_32_chars_min
+JWT_EXPIRES_IN=7d
+
+RESELLER_TOKENS=token1,token2,token3
+
+ADMIN_SEED_EMAIL=admin@example.com
+ADMIN_SEED_PASSWORD=Admin12345!
+```
+
+In this case there is **no** `MONGO_USER` / `MONGO_PASS`, unless you manually enabled authentication in your local MongoDB installation.
+
+---
+
+### 🔥 Golden Rules (avoid 90% of bugs)
+
+- **JWT_SECRET** must be long and random (minimum 32 characters).
+- **RESELLER_TOKENS** must be comma-separated with **no spaces**:  
+  - Correct: `token1,token2,token3`  
+  - Incorrect: `token1, token2`
+- **VITE_API_BASE_URL** belongs to the frontend, but with Docker it is convenient to keep it in the root `.env`.
+
+---
+
+**🚩 _If you run with Docker Compose, use `mongo` as the host in `MONGO_URI`. If you run locally, use `127.0.0.1`._**
 
 > **Frontend env variable note:** All frontend (`/frontend`) variables exposed to the browser **must** be prefixed with `VITE_`.
 
----
 
 
 
