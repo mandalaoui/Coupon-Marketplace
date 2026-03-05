@@ -7,6 +7,7 @@
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
+- [Key Features](#-key-features)
 - [Tech Stack](#-tech-stack)
 - [Project Structure](#-project-structure)
 - [Quick Start](#-quick-start)
@@ -30,6 +31,18 @@ Coupon Marketplace is a full-stack web application that allows:
 - **Resellers** to integrate programmatically via a versioned REST API using static Bearer Tokens.
 
 Purchases are **atomic** — using MongoDB's `findOneAndUpdate` with `{ is_sold: false }` to guarantee a coupon can never be sold twice.
+
+---
+
+## ✨ Key Features
+
+- Full coupon lifecycle management (Admin CRUD)
+- Secure Admin authentication with JWT
+- Public storefront for browsing and purchasing coupons
+- Reseller API for programmatic integrations
+- Atomic coupon purchase to prevent double-selling
+- Input validation using Joi
+- Dockerized full-stack deployment
 
 ---
 
@@ -85,8 +98,6 @@ coupon-marketplace/
 │   ├── utils/
 │   │   ├── AppError.js               # Custom error class
 │   │   └── schemas.js                # Joi validation schemas
-│   ├── validation/
-│   │   └── Coupon.js                 # Coupon-specific validation rules
 │   ├── .env                          # Backend environment variables
 │   ├── api_requests.rest             # HTTP test file (REST Client)
 │   ├── app.js                        # Express app setup & middleware
@@ -112,13 +123,12 @@ coupon-marketplace/
 │   │   ├── App.jsx                   # Router + route definitions
 │   │   ├── main.jsx                  # React entry point
 │   │   └── styles.css                # Global CSS design system
-│   ├── .env                          # Frontend environment variables
 │   ├── Dockerfile                    # Nginx + Vite build image
 │   ├── index.html                    # HTML entry point
 │   ├── nginx.conf                    # Nginx SPA config
 │   └── vite.config.js                # Vite build configuration
 │
-├── .env                              # Root-level env (optional)
+├── .env                              # Root-level environment variables
 ├── docker-compose.yml                # Full stack orchestration
 └── README.md
 ```
@@ -127,83 +137,133 @@ coupon-marketplace/
 
 ## 🚀 Quick Start
 
-The fastest way to launch the entire ecosystem — Frontend, Backend, and MongoDB — is via Docker Compose.
+> Get up and running with the full-stack Coupon Marketplace. Follow the instructions for **either Docker Compose (recommended)** or **Local Development (no Docker)**.
 
-### Prerequisites
+### 🚦 Pre-flight Checklist
 
-- [Docker](https://www.docker.com/) & Docker Compose installed
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) **installed** (for Docker flow).
+- **Ports 3000, 12345, 27017** are **free** (not used by other apps).
+- **Environment file(s) created** — see steps below.
 
-### Run with Docker
+---
 
-```bash
-# Clone the repository
-git clone <repository-url>
-cd coupon-marketplace
+### 🐳 A) Run with Docker Compose (Recommended)
 
-# Start all services
-docker-compose up --build
-```
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd coupon-marketplace
+   ```
 
-### Default URLs
+2. **Create the root `.env` file:**
+   - Copy the example if provided, or create a new `.env` at the project root:
+     ```bash
+     cp .env.example .env   # If .env.example exists
+     # OR create a new .env file
+     ```
+   - **Edit `.env` and set values for at least:**
+     - `JWT_SECRET` — a long random string
+     - `RESELLER_TOKENS` — comma-separated tokens (e.g., `token1,token2`)
+     - `ADMIN_SEED_EMAIL` / `ADMIN_SEED_PASSWORD` — credentials for first admin user
+     - Other fields as needed (see "Configuration" below)
 
-| Service              | URL                                              |
-|----------------------|--------------------------------------------------|
-| Frontend (Shop & Admin) | http://localhost:3000                         |
-| Backend API          | http://localhost:12345                           |
-| API Health Check     | http://localhost:12345/api/health                |
-| MongoDB              | `mongodb://localhost:27017/coupon_marketplace`   |
+3. **Start all services (frontend, backend, MongoDB):**
+   ```bash
+   docker compose up --build
+   # If you have older Docker, use: docker-compose up --build
+   ```
 
-### Run Without Docker (Local Development)
+4. **Access the application:**
 
-**Backend:**
-```bash
-cd backend
-npm install
-npm run dev     # or: node app.js
-```
+   | Service               | URL                                         |
+   |-----------------------|---------------------------------------------|
+   | Frontend (Shop/Admin) | http://localhost:3000                       |
+   | Backend API           | http://localhost:12345                      |
+   | API Health Check      | http://localhost:12345/api/health           |
+   | MongoDB               | mongodb://localhost:27017/coupon_marketplace |
 
-**Frontend:**
-```bash
-cd frontend
-npm install
-npm run dev
-```
+
+### 💻 B) Run Locally (No Docker)
+
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd coupon-marketplace
+   ```
+
+2. **Set up backend environment:**
+   - Create `/backend/.env` (see example in `backend/.env.example` if provided).
+   - At minimum, fill in:
+     - `PORT=12345`
+     - `MONGO_URI=mongodb://127.0.0.1:27017/coupon_marketplace`
+     - `JWT_SECRET` / `RESELLER_TOKENS` / `ADMIN_SEED_EMAIL` / `ADMIN_SEED_PASSWORD`
+     - And any other required settings below.
+
+3. **Install and run the backend:**
+   ```bash
+   cd backend
+   npm install
+   npm run dev    # or: node app.js
+   ```
+
+4. **Install and run the frontend (new terminal):**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+5. **Start MongoDB locally** if not running already.
+
+6. **Access the application:**
+
+   | Service               | URL                                         |
+   |-----------------------|---------------------------------------------|
+   | Frontend (Shop/Admin) | http://localhost:3000                       |
+   | Backend API           | http://localhost:12345                      |
+   | API Health Check      | http://localhost:12345/api/health           |
+   | MongoDB               | mongodb://127.0.0.1:27017/coupon_marketplace |
+
+---
+
+### 🛠 Common Troubleshooting
+
+- **App crashes at startup**?  
+  → Confirm required `.env` file(s) exist with all necessary keys filled in.
+- **Ports already in use**?  
+  → Ensure ports 3000 (frontend), 12345 (backend), 27017 (MongoDB) are not occupied by other processes.
+- **Frontend can't reach backend** in local dev?  
+  → Check `VITE_API_BASE_URL` in frontend and CORS/backend port settings.
 
 ---
 
 ## ⚙️ Configuration (Environment Variables)
 
-Create `.env` files in the appropriate directories before running.
+This project uses **two separate `.env` files** depending on how you run it:
 
-### Backend — `/backend/.env`
-```env
-PORT=12345
-MONGO_URI=mongodb://mongo:27017/coupon_marketplace
-JWT_SECRET=dev_secret_change_me
-ADMIN_SEED_EMAIL=admin@example.com
-ADMIN_SEED_PASSWORD=Admin1234!
-RESELLER_TOKENS=token1,token2
-```
+- `/.env` (project root): **required for Docker Compose** (recommended).
+- `backend/.env`: **required for local backend run without Docker**.
 
-| Variable             | Description                                        |
-|----------------------|----------------------------------------------------|
-| `PORT`               | Port the Express server listens on                 |
-| `MONGO_URI`          | MongoDB connection string                          |
-| `JWT_SECRET`         | Secret used to sign/verify admin JWTs              |
-| `ADMIN_SEED_EMAIL`   | Email for the seeded admin account                 |
-| `ADMIN_SEED_PASSWORD`| Password for the seeded admin account              |
-| `RESELLER_TOKENS`    | Comma-separated list of valid reseller tokens      |
+The most important environment variables are:
 
-### Frontend — `/frontend/.env`
-```env
-# Development
-VITE_API_BASE_URL=http://localhost:12345
+| Variable             | Description                                             |
+|----------------------|---------------------------------------------------------|
+| `PORT`               | Backend Express port                                    |
+| `MONGO_URI`          | MongoDB connection string                               |
+| `MONGO_USER`/`MONGO_PASS` | (Docker only) MongoDB credentials                 |
+| `JWT_SECRET`         | Secret for admin JWT tokens                             |
+| `JWT_EXPIRES_IN`     | (e.g. `7d`) Token expiry                               |
+| `RESELLER_TOKENS`    | Comma-separated tokens for Reseller API authentication  |
+| `ADMIN_SEED_EMAIL`   | Email for first admin                                   |
+| `ADMIN_SEED_PASSWORD`| Password for first admin                                |
+| `VITE_API_BASE_URL`  | (Frontend) Backend API URL (default: `http://localhost:12345`) |
+| `NODE_ENV`           | Runtime environment                                     |
 
-# Docker / Production (leave empty if Nginx proxies /api)
-# VITE_API_BASE_URL=
-```
+> **Frontend env variable note:** All frontend (`/frontend`) variables exposed to the browser **must** be prefixed with `VITE_`.
 
-> ⚠️ All frontend environment variables **must** be prefixed with `VITE_` to be exposed to the browser by Vite.
+---
+
+
 
 ---
 
@@ -242,6 +302,18 @@ HTTP Request
 ---
 
 ## 🔌 API Reference
+
+| Method | Endpoint | Description |
+|------|------|------|
+| GET | /api/health | Health check |
+| POST | /api/admin/auth/login | Admin login |
+| GET | /api/admin/products | List coupons |
+| POST | /api/admin/products | Create coupon |
+| PATCH | /api/admin/products/:id | Update coupon |
+| DELETE | /api/admin/products/:id | Delete coupon |
+| GET | /api/shop/products | Public listing |
+| POST | /api/shop/products/:id/purchase | Purchase coupon |
+| POST | /api/v1/products/:id/purchase | Reseller purchase |
 
 ### Health Check
 
@@ -295,10 +367,12 @@ Content-Type: application/json
 
 {
   "name": "Netflix 1 Month",
-  "value": "NFLX-XXXX-YYYY",
+  "description": "Gift card",
+  "image_url": "https://...",
   "cost_price": 30,
   "margin_percentage": 20,
-  "category": "Streaming"
+  "value_type": "STRING",
+  "value": "NFLX-XXXX-YYYY"
 }
 ```
 
@@ -346,6 +420,28 @@ On success, the response includes the revealed `value` (coupon code). The produc
 
 ### Reseller API (v1)
 
+#### List Available Coupons
+
+```http
+GET /api/v1/products
+Authorization: Bearer <reseller_token>
+```
+> **All reseller endpoints require:**  
+> `Authorization: Bearer <reseller_token>`
+
+Returns a list of unsold coupons available for resellers to purchase. The response includes relevant product metadata, calculated `minimum_sell_price`, but never exposes the secret coupon `value` or `cost_price`.
+
+#### Get Coupon Details
+
+```http
+GET /api/v1/products/:id
+Authorization: Bearer <reseller_token>
+```
+> **All reseller endpoints require:**  
+> `Authorization: Bearer <reseller_token>`
+
+Returns detailed information for a single coupon product, including all public fields and `minimum_sell_price` (but **never** the coupon `value` itself).
+
 #### Purchase a Coupon
 
 ```http
@@ -357,8 +453,10 @@ Content-Type: application/json
   "reseller_price": 36
 }
 ```
+> **All reseller endpoints require:**  
+> `Authorization: Bearer <reseller_token>`
 
-The `reseller_price` must be ≥ the calculated `minimum_sell_price`. Otherwise the request is rejected with `403 Forbidden`.
+The `reseller_price` must be greater than or equal to the calculated `minimum_sell_price`. Otherwise, the request is rejected with `400 Bad Request`:
 
 ---
 
@@ -382,6 +480,34 @@ The `reseller_price` must be ≥ the calculated `minimum_sell_price`. Otherwise 
 
 ---
 
+## Screenshots
+
+### Admin & Shop Screenshots
+
+**Shop Page**
+
+![Shop page - customer storefront](shop_page.png)
+
+**Admin Login**
+
+![Admin login page](admin_login.png)
+
+**Admin Dashboard**
+
+![Admin dashboard - coupon management](admin_dashboard.png)
+
+**Create Coupon (Admin)**
+
+![Admin creates new coupon](create_coupon.png)
+
+**Edit Coupon (Admin)**
+
+![Admin edits existing coupon](edit_coupon.png)
+
+
+
+---
+
 ## 📐 Business Logic & Rules
 
 ### Pricing Formula
@@ -394,13 +520,17 @@ $$\text{minimum\_sell\_price} = \text{cost\_price} \times \left(1 + \frac{\text{
 
 ### Data Visibility Rules
 
-| Field          | Customer (browse) | Customer (after purchase) | Admin | Reseller |
-|----------------|:-----------------:|:------------------------:|:-----:|:--------:|
-| `name`         | ✅                | ✅                        | ✅    | ✅        |
-| `sell_price`   | ✅                | ✅                        | ✅    | ✅        |
-| `value` (code) | ❌                | ✅                        | ✅    | ✅        |
-| `cost_price`   | ❌                | ❌                        | ✅    | ❌        |
-| `margin_%`     | ❌                | ❌                        | ✅    | ❌        |
+| Field            | Customer (browse) | Customer (after purchase) | Admin | Reseller (browse) | Reseller (after purchase) |
+|------------------|:-----------------:|:------------------------:|:-----:|:-----------------:|:--------------------------:|
+| `name`           | ✅                | ✅                        | ✅    | ✅                | ✅                         |
+| `sell_price`     | ✅                | ✅                        | ✅    | ✅                | ✅                         |
+| `value` (code)   | ❌                | ✅                        | ❌    | ❌                | ✅                         |
+| `cost_price`     | ❌                | ❌                        | ✅    | ❌                | ❌                         |
+| `margin_%`       | ❌                | ❌                        | ✅    | ❌                | ❌                         |
+
+- Coupon `value` (the redeemable code) is never exposed in product listings.
+- It is returned only after a successful purchase (for both customers and resellers).
+- Sensitive pricing fields (`cost_price`, `margin_percentage`) are visible only to Admin APIs.
 
 ### Atomic Purchase Guarantee
 
@@ -442,18 +572,6 @@ If the product is already sold, the query returns `null` and a `409 Conflict` is
 
 ---
 
-## 🚀 Roadmap
-
-- [ ] Stripe integration for real payments
-- [ ] Email delivery system for purchased coupon codes
-- [ ] Support for multiple stock quantities per product
-- [ ] Dark Mode UI toggle
-- [ ] Reseller dashboard with purchase history
-- [ ] Rate limiting on purchase endpoints
-- [ ] Pagination for large product catalogs
-
----
-
 ## 🌱 Database Seeding
 
 To populate the database with an initial admin user and sample coupons:
@@ -468,3 +586,14 @@ The seed script uses `ADMIN_SEED_EMAIL` and `ADMIN_SEED_PASSWORD` from your `.en
 ---
 
 > ⚠️ **Educational Project Disclaimer:** This system is built for demonstration purposes. Do **not** use default passwords, hardcoded secrets, or static tokens in a production environment.
+
+---
+
+## License
+
+This project is provided for educational purposes.
+
+## Author
+
+Omer Mandalaoui  
+Full-Stack Developer
